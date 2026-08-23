@@ -1,23 +1,92 @@
-# 🤟 Arabic Sign Language Recognition — Desktop Application
+<div align="center">
 
-A real-time desktop application for recognizing **Arabic Sign Language (ArSL)**, built with PySide6/Qt and powered by dual deep learning models. Supports both alphabet-level and word-level recognition with Arabic text-to-speech output.
+<img src="logo_military.png" height="80" alt="Egyptian Military Academy"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<img src="logo_digilians.png" height="80" alt="DiGiLiANS"/>
+
+<br/>
+
+# Arabic Sign Language Translator
+
+### Real-time Recognition · Alphabet & Words · لغة الإشارة العربية
+
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
+[![PySide6](https://img.shields.io/badge/PySide6-Qt%20Framework-41CD52?style=flat&logo=qt&logoColor=white)](https://doc.qt.io/qtforpython/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-EfficientNetB0-FF6F00?style=flat&logo=tensorflow&logoColor=white)](https://tensorflow.org)
+[![ONNX](https://img.shields.io/badge/ONNX-Runtime-005CED?style=flat&logo=onnx&logoColor=white)](https://onnxruntime.ai)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+
+A production-ready desktop application for **real-time Arabic Sign Language recognition**, built with PySide6/Qt and powered by a dual deep learning architecture. Translates hand gestures into Arabic text and speech — instantly.
+
+</div>
 
 ---
 
-## ✨ Features
+## 📸 Demo
 
-- 🖐️ **Real-time hand detection** using YOLO
-- 🔤 **Arabic alphabet recognition** — 31 classes via EfficientNetB0 (`.keras`)
-- 🗣️ **Word-level recognition** — 32 Yemeni ArSL words via ONNX model + MediaPipe landmarks
-- 🏆 **Dual-model architecture** — "best confidence wins" strategy
-- 🔊 **Arabic Text-to-Speech** via gTTS
-- 🎨 **Modern white UI** with institutional branding (Egyptian Military Academy & DiGiLiANS)
+<div align="center">
+  <img src="screenshot.png" alt="Arabic Sign Language Translator — App Screenshot" width="90%"/>
+</div>
+
+> *Real-time detection of "صانع ساعات" (watch maker) with 99% confidence using the Words model.*
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---|---|
+| 🖐️ **Real-time Hand Detection** | YOLO-powered bounding box detection at 20+ FPS |
+| 🔤 **Alphabet Recognition** | 31-class Arabic alphabet via EfficientNetB0 |
+| 🗣️ **Word Recognition** | 32 ArSL words via ONNX model + MediaPipe hand landmarks |
+| 🏆 **Dual-Model Fusion** | Both models run simultaneously; highest confidence wins |
+| ✍️ **Sentence Builder** | Add signs one by one to compose full sentences |
+| 🔊 **Arabic TTS** | Auto-speak recognized signs using gTTS |
+| ⚙️ **Adjustable Controls** | Tune Sensitivity, YOLO threshold, camera source, and model mode live |
+| 🎨 **Modern UI** | Clean white interface with institutional branding |
+
+---
+
+## 🧠 Model Architecture
+
+```
+Input Frame (Webcam)
+       │
+       ▼
+ YOLO Hand Detector ──► Bounding Box
+       │
+       ├──────────────────────────────┐
+       ▼                              ▼
+EfficientNetB0               MediaPipe Landmarks
+(Alphabet Model)              + Scaler + ONNX
+  31 classes                    32 classes
+       │                              │
+       └──────────┬───────────────────┘
+                  ▼
+         Best Confidence Wins
+                  │
+                  ▼
+          Arabic Text Output
+                  │
+                  ▼
+            gTTS Speech
+```
+
+| Model | Task | Classes | Format | Size |
+|---|---|---|---|---|
+| EfficientNetB0 | Arabic Alphabet | 31 | `.keras` | ~61 MB |
+| MediaPipe + ONNX | ArSL Words | 32 | `.onnx` | ~1.2 MB |
+| Scaler | Landmark normalization | — | `.pkl` | 4 KB |
+
+> 📦 **Note:** `.keras` and `.h5` files are stored via **Git LFS** due to their size.
 
 ---
 
 ## 🗂️ Project Structure
 
 ```
+arabic-sign-language-translator/
+│
 ├── main.py                  # Application entry point
 ├── main_window.py           # Main UI window (PySide6)
 ├── camera_worker.py         # Camera capture thread
@@ -27,35 +96,59 @@ A real-time desktop application for recognizing **Arabic Sign Language (ArSL)**,
 ├── labels.py                # Alphabet class labels (31 classes)
 ├── labels_words.py          # Word class labels (32 classes)
 ├── tts_worker.py            # Arabic TTS worker thread
-├── scaler.pkl               # Feature scaler for landmark normalization
+│
+├── best_model.keras         # EfficientNetB0 weights      [Git LFS]
+├── best_sign_model.h5       # Backup model weights        [Git LFS]
 ├── sign_model.onnx          # ONNX word recognition model
-├── best_model.keras         # EfficientNetB0 alphabet classifier  ← Git LFS
-├── best_sign_model.h5       # Backup model weights               ← Git LFS
-├── requirements.txt         # Python dependencies
+├── scaler.pkl               # Landmark feature scaler
+│
 ├── logo_military.png        # Egyptian Military Academy logo
-└── logo_digilians.png       # DiGiLiANS logo
+├── logo_digilians.png       # DiGiLiANS logo
+├── requirements.txt         # Python dependencies
+├── main.spec                # PyInstaller build spec
+└── README.md
 ```
 
 ---
 
-## ⚙️ Requirements
+## ⚙️ Installation
 
-- Python 3.9+
-- Webcam
+### Prerequisites
 
-Install dependencies:
+- Python **3.9+**
+- A connected **webcam**
+- Git LFS (for model files)
+
+### Clone & Setup
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/arabic-sign-language-translator.git
+cd arabic-sign-language-translator
+
+# 2. Pull large model files (requires Git LFS)
+git lfs pull
+
+# 3. Create a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate      # Linux / macOS
+venv\Scripts\activate         # Windows
+
+# 4. Install dependencies
 pip install -r requirements.txt
 ```
 
-Key packages include:
-- `PySide6` — GUI framework
-- `opencv-python` — camera capture
-- `mediapipe` — hand landmark detection
-- `onnxruntime` — ONNX model inference
-- `tensorflow` / `keras` — alphabet model
-- `gtts` + `pygame` — Arabic TTS playback
+### Key Dependencies
+
+| Package | Purpose |
+|---|---|
+| `PySide6` | GUI framework (Qt6) |
+| `opencv-python` | Camera capture & frame processing |
+| `mediapipe` | Hand landmark extraction |
+| `onnxruntime` | ONNX model inference |
+| `tensorflow` / `keras` | EfficientNetB0 alphabet model |
+| `ultralytics` | YOLO hand detection |
+| `gtts` + `pygame` | Arabic text-to-speech |
 
 ---
 
@@ -65,47 +158,51 @@ Key packages include:
 python main.py
 ```
 
----
+### UI Controls
 
-## 🧠 Model Details
-
-| Model | Task | Classes | Format |
-|---|---|---|---|
-| EfficientNetB0 | Arabic Alphabet | 31 | `.keras` |
-| ONNX + MediaPipe | ArSL Words | 32 | `.onnx` |
-
-The system runs both models simultaneously on each frame and outputs the prediction with the highest confidence score.
-
-> ⚠️ **Note:** The `.keras` and `.h5` model files are tracked with **Git LFS** due to their size.
+| Control | Description |
+|---|---|
+| **Both / Alphabet / Words** | Switch active recognition model |
+| **Sensitivity** | Confidence threshold for sign acceptance |
+| **YOLO** | Hand detection threshold |
+| **Camera** | Select camera source |
+| **Add Letter** | Append current sign to sentence |
+| **Auto-speak** | Toggle automatic TTS on sign detection |
 
 ---
 
-## 📦 Building as Executable
+## 📦 Build as Executable
 
-A `main.spec` file is included for PyInstaller:
+A `main.spec` file is included for PyInstaller packaging:
 
 ```bash
 pip install pyinstaller
 pyinstaller main.spec
 ```
 
-The executable will be output to the `dist/` folder.
-
----
-
-## 📸 Screenshots
-
-> *(Add screenshots here)*
+Output executable will be in the `dist/` folder.
 
 ---
 
 ## 🏛️ Acknowledgements
 
-Developed under the supervision of the **Egyptian Military Academy** in collaboration with **DiGiLiANS**.
+This project was developed under the supervision of the **Egyptian Military Academy** in collaboration with **DiGiLiANS**.
+
+Special thanks to the creators of the **KArSL-502** dataset used for word-level model training.
 
 ---
 
 ## 👤 Author
 
-**Mustafa** — AI & Deep Learning Engineer  
-Cairo, Egypt
+**Mustafa** — AI & Deep Learning Engineer
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://linkedin.com)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com)
+
+---
+
+<div align="center">
+
+*Built with ❤️ for Arabic accessibility — Cairo, Egypt 🇪🇬*
+
+</div>
