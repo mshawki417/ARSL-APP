@@ -32,6 +32,30 @@ A production-ready desktop application for **real-time Arabic Sign Language reco
 
 ---
 
+## ⬇️ Download & Run (No Installation Required)
+
+> **Just click the button below — the app will download as a ready-to-run `.zip` file. No Python, no setup needed.**
+
+<div align="center">
+
+[![Download App](https://img.shields.io/badge/⬇️%20Download%20App-v1.0%20Release-2ea44f?style=for-the-badge)](https://github.com/mshawki417/ARSL-APP/releases/download/v.1/dist.zip)
+
+</div>
+
+### ▶️ How to Run
+
+1. Click the download button above — `dist.zip` will download automatically
+2. **Extract** the zip file anywhere on your PC
+3. Open the extracted `dist/` folder
+4. Double-click **`main.exe`** to launch the app
+5. Allow camera access if prompted — and you're ready to go 🎉
+
+> ✅ **No Python installation required** — everything is bundled inside the `.exe`
+>
+> ⚠️ **Windows only** — if Windows Defender shows a warning, click *"More info" → "Run anyway"* (this is normal for unsigned executables)
+
+---
+
 ## ✨ Key Features
 
 | Feature | Description |
