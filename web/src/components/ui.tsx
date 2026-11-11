@@ -1,74 +1,133 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useI18n } from "@/lib/i18n";
 import { asset } from "@/lib/paths";
 import { loadHints, type Hint } from "@/lib/storage";
+import { Icon, type IconName } from "./Icon";
 
 /* ------------------------------ logos ------------------------------ */
-export function Logos({ size = 56, className = "" }: { size?: number; className?: string }) {
+export function Logos({ size = 44, className = "" }: { size?: number; className?: string }) {
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={asset("/brand/logo_military.png")} alt="Egyptian Military Academy" height={size} style={{ height: size, width: "auto" }} />
+      <img src={asset("/brand/logo_military.png")} alt="Egyptian Military Academy" style={{ height: size, width: "auto" }} />
+      <span className="h-7 w-px bg-line" aria-hidden />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={asset("/brand/logo_digilians.png")} alt="DiGiLiANS" height={size} style={{ height: size, width: "auto" }} />
+      <img src={asset("/brand/logo_digilians.png")} alt="DiGiLiANS" style={{ height: size, width: "auto" }} />
     </div>
   );
 }
 
-/* ---------------------------- top bar ---------------------------- */
-export function TopBar({ title, onBack, right }: { title: string; onBack?: () => void; right?: ReactNode }) {
-  const { t, lang, setLang, dir } = useI18n();
+/* ------------------------- language switch ------------------------- */
+export function LangSwitch() {
+  const { lang, setLang } = useI18n();
   return (
-    <header className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pt-4">
+    <button
+      className="btn !px-3.5"
+      onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+      aria-label={lang === "ar" ? "Switch to English" : "التبديل إلى العربية"}
+    >
+      <Icon name="globe" size={18} />
+      {lang === "ar" ? "EN" : "عربي"}
+    </button>
+  );
+}
+
+/* ----------------------------- demo top bar ----------------------------- */
+export function TopBar({
+  title,
+  icon = "hand",
+  onBack,
+  right,
+}: {
+  title: string;
+  icon?: IconName;
+  onBack?: () => void;
+  right?: ReactNode;
+}) {
+  const { t, dir } = useI18n();
+  return (
+    <header className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 pt-4">
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#7d5fff] to-[#4b32c3] text-white shadow-[0_10px_24px_-12px_rgba(75,50,195,0.9)]">
+        <Icon name={icon} size={26} />
+      </span>
+      <h1 className="text-2xl font-black sm:text-3xl">{title}</h1>
       {onBack && (
-        <button className="btn" onClick={onBack} aria-label={t("common.home")}>
-          <span aria-hidden>{dir === "rtl" ? "→" : "←"}</span>
+        <button className="btn btn-sm" onClick={onBack} aria-label={t("common.home")}>
+          <Icon name={dir === "rtl" ? "arrowRight" : "arrowLeft"} size={16} />
           {t("common.home")}
         </button>
       )}
-      <h1 className="text-2xl font-black sm:text-3xl">{title}</h1>
       <div className="ms-auto flex items-center gap-3">
         {right}
-        <Logos size={36} className="hidden sm:flex" />
-        <button className="btn !px-3" onClick={() => setLang(lang === "ar" ? "en" : "ar")} aria-label="Switch language">
-          {lang === "ar" ? "EN" : "عربي"}
-        </button>
+        <Logos size={34} className="hidden md:flex" />
+        <LangSwitch />
       </div>
     </header>
+  );
+}
+
+/* --------------------------------- panel --------------------------------- */
+export function Panel({
+  title,
+  icon,
+  aside,
+  children,
+  className = "",
+  bodyClassName = "",
+}: {
+  title: string;
+  icon?: IconName;
+  aside?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  bodyClassName?: string;
+}) {
+  return (
+    <section className={`panel ${className}`}>
+      <div className="panel-head">
+        <h2 className="panel-tab">
+          {icon && <Icon name={icon} size={20} />}
+          {title}
+        </h2>
+        {aside}
+      </div>
+      <div className={`panel-body ${bodyClassName}`}>{children}</div>
+    </section>
   );
 }
 
 /* -------------------------- confidence bar -------------------------- */
 export function ConfidenceBar({
   label,
+  icon,
   value,
   threshold,
-  color = "bg-grape",
   active = true,
+  color,
 }: {
   label: string;
+  icon?: IconName;
   value: number;
   threshold?: number;
-  color?: string;
   active?: boolean;
+  color?: string;
 }) {
   const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
   return (
-    <div className={active ? "" : "opacity-40"}>
-      <div className="mb-1 flex justify-between text-sm font-bold">
-        <span>{label}</span>
-        <span className="tabular-nums" dir="ltr">
-          {active ? `${pct}%` : "—"}
-        </span>
+    <div className={`flex items-center gap-3 ${active ? "" : "opacity-50"}`}>
+      <span className="w-24 shrink-0 text-sm font-bold text-muted sm:w-32">
+        {icon && <Icon name={icon} size={16} className="me-1.5 inline text-violet" />}
+        {label}
+      </span>
+      <div className="meter flex-1">
+        <i style={{ width: active ? `${pct}%` : 0, ...(color ? { background: color } : null) }} />
+        {threshold !== undefined && <b style={{ insetInlineStart: `${threshold * 100}%` }} />}
       </div>
-      <div className="relative h-4 overflow-hidden rounded-full border-2 border-ink bg-white">
-        <div className={`h-full ${color} transition-[width] duration-150`} style={{ width: active ? `${pct}%` : 0 }} />
-        {threshold !== undefined && (
-          <div className="absolute top-0 h-full w-[3px] bg-ink/70" style={{ insetInlineStart: `${threshold * 100}%` }} />
-        )}
-      </div>
+      <span className="w-14 rounded-full bg-violet-l px-2 py-0.5 text-center text-sm font-black tabular-nums text-violet-d" dir="ltr">
+        {active ? `${pct}%` : "--%"}
+      </span>
     </div>
   );
 }
@@ -78,7 +137,7 @@ export function ProgressRing({
   fraction,
   size = 120,
   stroke = 12,
-  color = "#2ec4a6",
+  color = "#6c4cf1",
   children,
 }: {
   fraction: number;
@@ -92,7 +151,7 @@ export function ProgressRing({
   return (
     <div className="relative inline-grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e8e4f5" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e8e2ff" strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -103,7 +162,7 @@ export function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - Math.max(0, Math.min(1, fraction)))}
-          style={{ transition: "stroke-dashoffset 0.12s linear" }}
+          style={{ transition: "stroke-dashoffset 0.12s linear, stroke 0.3s" }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">{children}</div>
@@ -112,7 +171,7 @@ export function ProgressRing({
 }
 
 /* ------------------------------ confetti ------------------------------ */
-const CONFETTI_COLORS = ["#ff6b6b", "#ffc83d", "#2ec4a6", "#3db9f5", "#6c4cf1", "#ff7eb6"];
+const CONFETTI_COLORS = ["#6c4cf1", "#ffc83d", "#22b99a", "#3db9f5", "#ff7eb6", "#b9a6ff"];
 
 export function Confetti({ burstKey, count = 36 }: { burstKey: number; count?: number }) {
   const pieces = useMemo(
@@ -148,7 +207,7 @@ export function Confetti({ burstKey, count = 36 }: { burstKey: number; count?: n
               "--dy": `${p.dy}px`,
               "--rot": `${p.rot}deg`,
               animation: `confetti 1.1s ease-out ${p.delay}s both`,
-            } as React.CSSProperties
+            } as CSSProperties
           }
         />
       ))}
@@ -161,10 +220,10 @@ const BONES: [number, number][] = [
   [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12],
   [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
 ];
-const HAND_COLORS = ["#6c4cf1", "#ff6b6b"];
+const HAND_COLORS = ["#6c4cf1", "#f5a800"];
 
 function Skeleton({ hint }: { hint: Hint }) {
-  // viewBox 0..1 with a little margin; mirrored to match the mirrored camera preview
+  // mirrored to match the mirrored camera preview
   return (
     <svg viewBox="-0.06 -0.06 1.12 1.12" className="h-full w-full -scale-x-100" role="img" aria-label="hint">
       {hint.hands.map((h, i) => (
@@ -210,5 +269,5 @@ export function HintView({ signId }: { signId: string }) {
     );
   }
   if (hint) return <Skeleton hint={hint} />;
-  return <p className="p-3 text-center text-sm font-semibold opacity-70">{t("ch.nohint")}</p>;
+  return <p className="p-3 text-center text-sm font-semibold text-muted">{t("ch.nohint")}</p>;
 }

@@ -75,3 +75,10 @@ web looks lower than on desktop, tune `BOX_PADDING` in `src/lib/recognizer.ts` f
   the words model on KArSL-502 landmarks. Lighting, camera angle and a plain background matter.
 * Letters are single-hand signs; a few words use two hands (the camera must see both).
 * Alphabet inference runs on CPU WebAssembly (~90 ms on a typical laptop), so letters update ~8–10×/s.
+
+
+## Landing page (v2)
+
+- `/` is the landing page (hero motion-graphic video, numbers, features, how it works, try-without-camera, use cases, FAQ, CTA). The demo lives at `/demo/`.
+- Contact buttons: edit `src/lib/site.ts` (WhatsApp number / email). Empty values hide the buttons.
+- Hero video: `public/video/hero.mp4` + `poster.jpg` (illustrative poses, not real signs).

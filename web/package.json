@@ -12,6 +12,7 @@
     "test": "tsx tests/features.test.ts"
   },
   "dependencies": {
+    "@fontsource-variable/cairo": "^5.3.0",
     "@mediapipe/tasks-vision": "^0.10.22",
     "next": "^16.0.0",
     "onnxruntime-web": "^1.23.0",

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useEngine } from "./EngineProvider";
+import { Icon } from "./Icon";
 import { useI18n } from "@/lib/i18n";
 import { stats } from "@/lib/stats";
 import type { FrameResult, Mode, Thresholds } from "@/lib/recognizer";
@@ -19,8 +20,8 @@ const BONES: [number, number][] = [
 export type Tone = "idle" | "seen" | "good" | "match";
 const TONE_COLORS: Record<Tone, { bone: string; dot: string; box: string }> = {
   idle: { bone: "rgba(255,255,255,0.85)", dot: "#ffffff", box: "rgba(255,255,255,0.6)" },
-  seen: { bone: "#3db9f5", dot: "#ffffff", box: "#3db9f5" },
-  good: { bone: "#2ec4a6", dot: "#ffffff", box: "#2ec4a6" },
+  seen: { bone: "#b9a6ff", dot: "#ffffff", box: "#b9a6ff" },
+  good: { bone: "#35e0bd", dot: "#ffffff", box: "#35e0bd" },
   match: { bone: "#ffc83d", dot: "#ffffff", box: "#ffc83d" },
 };
 
@@ -237,7 +238,10 @@ export function CameraStage({ mode, thresholds, onFrame, tone = "seen", overlay,
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-[28px] border-[3px] border-ink bg-ink ${className}`} style={{ aspectRatio: "16 / 9" }}>
+    <div
+      className={`relative overflow-hidden rounded-[28px] border-4 border-white bg-[#2b2660] shadow-[0_18px_50px_-18px_rgba(75,50,195,0.55)] ${className}`}
+      style={{ aspectRatio: "16 / 9" }}
+    >
       {/* mirrored layer: video + landmark canvas stay perfectly aligned */}
       <div className="absolute inset-0 -scale-x-100">
         <video ref={videoRef} playsInline muted autoPlay className="h-full w-full object-cover" />
@@ -246,42 +250,55 @@ export function CameraStage({ mode, thresholds, onFrame, tone = "seen", overlay,
 
       {cam === "running" && !blocked && !hasHand && (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center">
-          <span className="rounded-full bg-white/90 px-4 py-1.5 text-sm font-bold text-ink shadow">{t("cam.nohand")}</span>
+          <span className="animate-rise inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-1.5 text-sm font-bold text-violet-d shadow-lg">
+            <Icon name="hand" size={16} />
+            {t("cam.nohand")}
+          </span>
         </div>
+      )}
+
+      {cam === "running" && !blocked && (
+        <span className="absolute start-3 top-3 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 text-xs font-black text-violet-d shadow">
+          <span className="live-dot" />
+          {t("live.badge")}
+        </span>
       )}
 
       {overlay}
 
       {(cam === "starting" || blocked) && (
-        <Notice>
+        <Notice icon={blocked ? "hand" : "camera"}>
           <p className="text-lg font-bold">{blocked ? blocked.msg : t("cam.starting")}</p>
           {blocked?.detail && (
-            <p className="mt-1 max-w-md text-xs opacity-70" dir="ltr">
+            <p className="mt-1 max-w-md text-xs text-muted" dir="ltr">
               {blocked.detail}
             </p>
           )}
           {blocked?.retry && (
-            <button className="btn btn-sun mt-3" onClick={retry}>
+            <button className="btn btn-accent mt-4" onClick={retry}>
               {t("common.retry")}
+              <Icon name="refresh" size={18} />
             </button>
           )}
         </Notice>
       )}
 
       {cam !== "running" && cam !== "starting" && (
-        <Notice>
+        <Notice icon="camera">
           <p className="max-w-md text-lg font-bold">{camMessage[cam]}</p>
-          <button className="btn btn-sun mt-3" onClick={() => setAttempt((a) => a + 1)}>
+          <button className="btn btn-accent mt-4" onClick={() => setAttempt((a) => a + 1)}>
             {t("common.retry")}
+            <Icon name="refresh" size={18} />
           </button>
         </Notice>
       )}
 
       {showCameraPicker && devices.length > 1 && cam === "running" && (
-        <label className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-ink">
-          {t("cam.select")}
+        <label className="absolute end-3 top-3 flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-violet-d shadow">
+          <Icon name="camera" size={14} />
           <select
-            className="max-w-[10rem] rounded bg-transparent text-xs"
+            className="max-w-[10rem] bg-transparent text-xs"
+            aria-label={t("cam.select")}
             value={deviceId || devices[0]?.deviceId}
             onChange={(e) => setDeviceId(e.target.value)}
           >
@@ -297,8 +314,13 @@ export function CameraStage({ mode, thresholds, onFrame, tone = "seen", overlay,
   );
 }
 
-function Notice({ children }: { children: ReactNode }) {
+function Notice({ children, icon }: { children: ReactNode; icon: "camera" | "hand" }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-ink/85 p-6 text-center text-white">{children}</div>
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-[#f4f0ff]/95 to-[#e6dfff]/95 p-6 text-center text-ink backdrop-blur-sm">
+      <span className="mb-4 grid h-24 w-24 animate-float place-items-center rounded-full bg-white text-violet shadow-[0_12px_30px_-12px_rgba(108,76,241,0.6)]">
+        <Icon name={icon} size={46} />
+      </span>
+      {children}
+    </div>
   );
 }

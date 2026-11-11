@@ -4,15 +4,16 @@ import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useStats } from "@/lib/stats";
 import { NUM_LETTERS, NUM_WORDS } from "@/lib/labels";
-import { Logos, TopBar } from "./ui";
+import { Icon, type IconName } from "./Icon";
+import { Logos, Panel, TopBar } from "./ui";
 
-const STEPS = [
-  { key: "tech.s1", icon: "📷", bg: "bg-sky" },
-  { key: "tech.s2", icon: "🖐️", bg: "bg-mint" },
-  { key: "tech.s3", icon: "🧠", bg: "bg-pink" },
-  { key: "tech.s4", icon: "🏁", bg: "bg-sun" },
-  { key: "tech.s5", icon: "💬", bg: "bg-coral" },
-] as const;
+const STEPS: { key: string; icon: IconName; tint: string }[] = [
+  { key: "tech.s1", icon: "camera", tint: "from-[#3db9f5] to-[#2a7fd6]" },
+  { key: "tech.s2", icon: "hand", tint: "from-[#35d4b3] to-[#14937a]" },
+  { key: "tech.s3", icon: "cpu", tint: "from-[#ff9ccb] to-[#e0529a]" },
+  { key: "tech.s4", icon: "target", tint: "from-[#ffd45e] to-[#f5a800]" },
+  { key: "tech.s5", icon: "volume", tint: "from-[#9d86ff] to-[#6c4cf1]" },
+];
 
 const STACK = ["MediaPipe Hand Landmarker", "EfficientNetB0 (ONNX)", "Landmark MLP (ONNX)", "ONNX Runtime Web (WASM)", "Next.js · React · TypeScript", "Web Speech API"];
 
@@ -20,74 +21,67 @@ export function TechScreen({ onBack }: { onBack: () => void }) {
   const { t, dir } = useI18n();
   const s = useStats();
   const [active, setActive] = useState(0);
-  const arrow = dir === "rtl" ? "◀" : "▶";
 
   return (
     <>
-      <TopBar title={t("tech.title")} onBack={onBack} />
+      <TopBar title={t("tech.title")} icon="cpu" onBack={onBack} />
       <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6">
-        <section className="card p-5 sm:p-8">
-          <h2 className="mb-5 text-xl font-black">{t("tech.sub")}</h2>
-
+        <Panel title={t("tech.sub")} icon="layers" bodyClassName="!pt-4 sm:!p-8">
           <ol className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
             {STEPS.map((st, i) => (
               <li key={st.key} className="flex flex-1 flex-col items-center gap-3 lg:flex-row">
                 <button
                   onClick={() => setActive(i)}
                   aria-current={active === i}
-                  className={`flex w-full flex-col items-center gap-2 rounded-3xl border-[3px] border-ink p-4 text-center transition-all ${st.bg} ${
-                    active === i ? "-translate-y-1 shadow-[0_6px_0_#1d1b3a]" : "opacity-80 hover:opacity-100"
+                  className={`flex w-full flex-col items-center gap-2 rounded-3xl p-4 text-center transition-all duration-300 ${
+                    active === i ? "-translate-y-1 bg-white shadow-[0_18px_40px_-16px_rgba(108,76,241,0.55)]" : "bg-white/50 hover:bg-white/80"
                   }`}
                 >
-                  <span className="text-4xl" aria-hidden>
-                    {st.icon}
+                  <span className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br text-white ${st.tint}`}>
+                    <Icon name={st.icon} size={28} />
                   </span>
-                  <span className="text-xs font-black opacity-70">{i + 1}</span>
                   <span className="font-black">{t(`${st.key}.t`)}</span>
                 </button>
                 {i < STEPS.length - 1 && (
-                  <span className="rotate-90 text-2xl lg:rotate-0" aria-hidden>
-                    {arrow}
-                  </span>
+                  <Icon name={dir === "rtl" ? "arrowLeft" : "arrowRight"} size={22} className="rotate-90 text-violet/50 lg:rotate-0" />
                 )}
               </li>
             ))}
           </ol>
 
-          <p key={active} className="animate-rise mt-6 rounded-2xl border-2 border-ink bg-cream p-4 text-lg font-semibold" aria-live="polite">
-            <b>
-              {active + 1}. {t(`${STEPS[active].key}.t`)}:
+          <p key={active} className="animate-rise mt-6 rounded-2xl bg-violet-l/70 p-4 text-lg font-semibold" aria-live="polite">
+            <b className="text-violet-d">
+              {t(`${STEPS[active].key}.t`)}:
             </b>{" "}
             {t(`${STEPS[active].key}.d`)}
           </p>
-        </section>
+        </Panel>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="card p-5">
-            <h2 className="mb-3 text-xl font-black">✨ {t("tech.why")}</h2>
+          <Panel title={t("tech.why")} icon="sparkles">
             <ul className="space-y-3 font-semibold">
               {(["tech.w1", "tech.w2", "tech.w3", "tech.w4"] as const).map((k) => (
-                <li key={k} className="flex gap-3 rounded-2xl bg-cream p-3">
-                  <span aria-hidden>✅</span>
+                <li key={k} className="flex gap-3 rounded-2xl bg-violet-l/60 p-3">
+                  <Icon name="check" size={20} className="mt-0.5 shrink-0 text-mint" />
                   <span>{t(k)}</span>
                 </li>
               ))}
             </ul>
-          </section>
+          </Panel>
 
-          <section className="card space-y-5 p-5">
-            <div>
-              <h2 className="mb-3 text-xl font-black">🛠️ {t("tech.stack")}</h2>
-              <div className="flex flex-wrap gap-2" dir="ltr">
-                {STACK.map((x) => (
-                  <span key={x} className="chip bg-grape/10">
-                    {x}
-                  </span>
-                ))}
-              </div>
+          <Panel title={t("tech.stack")} icon="cpu" bodyClassName="space-y-5">
+            <div className="flex flex-wrap gap-2" dir="ltr">
+              {STACK.map((x) => (
+                <span key={x} className="chip">
+                  {x}
+                </span>
+              ))}
             </div>
             <div>
-              <h2 className="mb-3 text-xl font-black">📡 {t("tech.live")}</h2>
+              <h3 className="mb-3 flex items-center gap-2 text-lg font-black">
+                <Icon name="zap" size={20} className="text-violet" />
+                {t("tech.live")}
+              </h3>
               <dl className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
                 <Num label={t("st.fps")} value={s.fps > 0 ? s.fps.toFixed(0) : "—"} />
                 <Num label={t("st.total")} value={s.totalMs > 0 ? `${Math.round(s.totalMs)} ${t("common.ms")}` : "—"} />
@@ -95,12 +89,12 @@ export function TechScreen({ onBack }: { onBack: () => void }) {
                 <Num label={t("common.words")} value={String(NUM_WORDS)} />
               </dl>
             </div>
-          </section>
+          </Panel>
         </div>
 
-        <footer className="card flex flex-wrap items-center gap-5 p-5">
+        <footer className="glass flex flex-wrap items-center gap-5 p-5">
           <Logos size={52} />
-          <p className="flex-1 text-sm font-semibold opacity-80">{t("tech.credits")}</p>
+          <p className="flex-1 text-sm font-semibold text-muted">{t("tech.credits")}</p>
         </footer>
       </main>
     </>
@@ -109,11 +103,11 @@ export function TechScreen({ onBack }: { onBack: () => void }) {
 
 function Num({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border-2 border-ink bg-cream p-3">
-      <dd className="text-xl font-black tabular-nums" dir="ltr">
+    <div className="rounded-2xl bg-violet-l/70 p-3">
+      <dd className="text-xl font-black tabular-nums text-violet-d" dir="ltr">
         {value}
       </dd>
-      <dt className="text-xs font-bold opacity-70">{label}</dt>
+      <dt className="text-xs font-bold text-muted">{label}</dt>
     </div>
   );
 }

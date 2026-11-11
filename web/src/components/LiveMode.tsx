@@ -8,7 +8,8 @@ import { stats } from "@/lib/stats";
 import { useSignTracker } from "@/lib/useSignTracker";
 import type { FrameResult, Mode, SignResult } from "@/lib/recognizer";
 import { CameraStage, type Tone } from "./CameraStage";
-import { ConfidenceBar, ProgressRing, TopBar } from "./ui";
+import { Icon } from "./Icon";
+import { ConfidenceBar, Panel, ProgressRing, TopBar } from "./ui";
 
 interface Item {
   kind: "letter" | "word" | "space";
@@ -91,10 +92,10 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
   const tone: Tone = !current ? "idle" : holdFrac > 0 ? "good" : "seen";
   const sentence = sentenceText(items);
 
-  const modes: { id: Mode; label: string }[] = [
-    { id: "both", label: t("live.mode.both") },
-    { id: "alphabet", label: t("live.mode.alphabet") },
-    { id: "words", label: t("live.mode.words") },
+  const modes: { id: Mode; label: string; icon: "layers" | "letters" | "message" }[] = [
+    { id: "both", label: t("live.mode.both"), icon: "layers" },
+    { id: "alphabet", label: t("live.mode.alphabet"), icon: "letters" },
+    { id: "words", label: t("live.mode.words"), icon: "message" },
   ];
 
   return (
@@ -105,20 +106,17 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
         <section className="flex flex-col gap-4">
           <CameraStage mode={mode} thresholds={thresholds} onFrame={onFrame} tone={tone} showCameraPicker />
 
-          <div className="card flex flex-wrap items-center gap-x-6 gap-y-3 p-4">
-            <div role="group" aria-label="mode" className="flex gap-2">
+          <div className="glass flex flex-wrap items-center gap-x-6 gap-y-3 p-3 sm:p-4">
+            <div role="group" aria-label="mode" className="seg">
               {modes.map((m) => (
-                <button
-                  key={m.id}
-                  aria-pressed={mode === m.id}
-                  onClick={() => setMode(m.id)}
-                  className={`btn !px-4 !py-2 ${mode === m.id ? "btn-grape" : ""}`}
-                >
+                <button key={m.id} aria-pressed={mode === m.id} onClick={() => setMode(m.id)} className="seg-btn">
+                  <Icon name={m.icon} size={16} />
                   {m.label}
                 </button>
               ))}
             </div>
-            <label className="flex min-w-[12rem] flex-1 items-center gap-3 font-bold">
+            <label className="flex min-w-[12rem] flex-1 items-center gap-3 font-bold text-muted">
+              <Icon name="zap" size={18} className="text-violet" />
               {t("live.sensitivity")}
               <input
                 type="range"
@@ -129,7 +127,7 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
                 className="h-2 flex-1"
                 aria-valuetext={`${sensitivity}%`}
               />
-              <span className="w-12 tabular-nums" dir="ltr">
+              <span className="w-12 font-black tabular-nums text-violet-d" dir="ltr">
                 {sensitivity}%
               </span>
             </label>
@@ -137,18 +135,24 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
         </section>
 
         {/* results column */}
-        <section className="flex flex-col gap-4">
-          <div className="card p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black">{t("live.detected")}</h2>
+        <section className="flex flex-col gap-5">
+          <Panel
+            title={t("live.detected")}
+            icon="sparkles"
+            aside={
               <span className="chip">
-                {t("live.hands")}: <b>{lastFrame?.hands.length ?? 0}</b>
+                <Icon name="hand" size={14} />
+                {t("live.hands")}: <b data-testid="hand-count">{lastFrame?.hands.length ?? 0}</b>
               </span>
-            </div>
-
-            <div className="mt-3 flex items-center gap-5" aria-live="polite">
-              <ProgressRing fraction={holdFrac} size={128} color={holdFrac >= 1 ? "#ffc83d" : "#2ec4a6"}>
-                <span key={current?.id ?? "none"} className={`animate-pop px-1 text-center font-black leading-none ${current ? (current.ar.length > 4 ? "text-3xl" : "text-5xl") : "text-4xl opacity-30"}`}>
+            }
+          >
+            <div className="flex items-center gap-5" aria-live="polite">
+              <ProgressRing fraction={holdFrac} size={128} color={holdFrac >= 1 ? "#ffc83d" : "#6c4cf1"}>
+                <span
+                  key={current?.id ?? "none"}
+                  data-testid="detected-sign"
+                  className={`animate-pop px-1 text-center font-black leading-none ${current ? (current.ar.length > 4 ? "text-3xl" : "text-5xl") : "text-4xl text-violet/25"}`}
+                >
                   {current ? current.ar : "؟"}
                 </span>
               </ProgressRing>
@@ -159,73 +163,98 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
                       {current.en}
                     </p>
                     <p className="mt-1 flex flex-wrap gap-2">
-                      <span className={`chip ${current.kind === "letter" ? "bg-coral/25" : "bg-sky/30"}`}>{current.kind === "letter" ? t("common.letter") : t("common.word")}</span>
-                      {current.isStable && <span className="chip bg-mint/30">✓ {t("live.stable")}</span>}
+                      <span className={`chip ${current.kind === "letter" ? "chip-coral" : "chip-sky"}`}>
+                        {current.kind === "letter" ? t("common.letter") : t("common.word")}
+                      </span>
+                      {current.isStable && (
+                        <span className="chip chip-mint">
+                          <Icon name="check" size={14} />
+                          {t("live.stable")}
+                        </span>
+                      )}
                     </p>
-                    <p className="mt-2 text-sm font-semibold opacity-70">{t("live.hold")}</p>
+                    <p className="mt-2 text-sm font-semibold text-muted">{t("live.hold")}</p>
                   </>
                 ) : (
-                  <p className="text-lg font-bold opacity-60">{t("live.waiting")}</p>
+                  <>
+                    <p className="text-lg font-black">{t("live.waiting")}</p>
+                    <p className="mt-1 text-sm font-semibold text-muted">{t("live.hold")}</p>
+                  </>
                 )}
               </div>
             </div>
 
             <div className="mt-5 grid gap-3">
               <ConfidenceBar
-                label={`${t("live.mode.alphabet")} · ${t("live.confidence")}`}
+                label={t("live.mode.alphabet")}
+                icon="target"
                 value={lastFrame?.letter?.confidence ?? 0}
                 threshold={thresholds.letter}
-                color="bg-coral"
                 active={!!lastFrame?.letter}
               />
               <ConfidenceBar
-                label={`${t("live.mode.words")} · ${t("live.confidence")}`}
+                label={t("live.mode.words")}
+                icon="chart"
                 value={lastFrame?.word?.confidence ?? 0}
                 threshold={thresholds.word}
-                color="bg-sky"
                 active={!!lastFrame?.word}
               />
             </div>
-          </div>
+          </Panel>
 
-          <div className="card flex flex-1 flex-col gap-3 p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black">{t("live.sentence")}</h2>
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-bold">
-                <input type="checkbox" checked={autoSpeak} onChange={(e) => setAutoSpeak(e.target.checked)} className="h-4 w-4" />
+          <Panel
+            title={t("live.sentence")}
+            icon="message"
+            className="flex-1"
+            aside={
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-muted">
+                <Icon name="volume" size={16} className="text-violet" />
                 {t("live.autospeak")}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoSpeak}
+                  aria-label={t("live.autospeak")}
+                  className="switch"
+                  onClick={() => setAutoSpeak((v) => !v)}
+                />
               </label>
+            }
+            bodyClassName="flex flex-col gap-3"
+          >
+            <div
+              data-testid="sentence"
+              className="min-h-[5.5rem] rounded-2xl border-2 border-dashed border-line bg-white/70 p-3 text-3xl font-black leading-relaxed"
+              aria-live="polite"
+            >
+              {sentence || <span className="text-base font-semibold text-muted">{t("live.sentence.empty")}</span>}
             </div>
 
-            <div className="min-h-[5rem] rounded-2xl border-2 border-dashed border-ink/40 bg-cream p-3 text-3xl font-black leading-relaxed" aria-live="polite">
-              {sentence || <span className="text-base font-semibold opacity-50">{t("live.sentence.empty")}</span>}
-            </div>
-
-            {noVoice && <p className="rounded-xl bg-sun/40 p-2 text-sm font-bold">{t("live.nonvoice")}</p>}
+            {noVoice && <p className="rounded-xl bg-[#fff1c2] p-2 text-sm font-bold text-[#7a5600]">{t("live.nonvoice")}</p>}
 
             <div className="flex flex-wrap gap-2">
-              <button className="btn btn-mint" disabled={!sentence} onClick={() => sayIt(sentence)}>
-                🔊 {t("live.speak")}
+              <button className="btn btn-primary" disabled={!sentence} onClick={() => sayIt(sentence)}>
+                <Icon name="volume" size={18} />
+                {t("live.speak")}
               </button>
-              <button
-                className="btn"
-                disabled={!current}
-                onClick={() => current && addSign(current)}
-                title={t("live.add")}
-              >
-                ＋ {t("live.add")}
+              <button className="btn" disabled={!current} onClick={() => current && addSign(current)} title={t("live.add")}>
+                <Icon name="plus" size={18} />
+                {t("live.add")}
               </button>
               <button className="btn" onClick={() => setItems((p) => [...p, { kind: "space", text: " " }])}>
-                ␣ {t("live.space")}
+                <Icon name="space" size={18} />
+                {t("live.space")}
               </button>
               <button className="btn" disabled={!items.length} onClick={() => setItems((p) => p.slice(0, -1))}>
-                ⌫ {t("live.back")}
+                <Icon name="backspace" size={18} />
+                {t("live.back")}
               </button>
-              <button className="btn btn-coral" disabled={!items.length} onClick={() => setItems([])}>
-                ✕ {t("live.clear")}
+              <button className="btn btn-danger" disabled={!items.length} onClick={() => setItems([])}>
+                <Icon name="trash" size={18} />
+                {t("live.clear")}
               </button>
             </div>
-          </div>
+          </Panel>
         </section>
       </main>
     </>

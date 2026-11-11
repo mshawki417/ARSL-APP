@@ -1,32 +1,30 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { I18nProvider, useI18n } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import { EngineProvider } from "./EngineProvider";
-import { Intro } from "./Intro";
 import { Hub } from "./Hub";
 import { LiveMode } from "./LiveMode";
 import { Challenge } from "./Challenge";
 import { StatsScreen } from "./StatsScreen";
 import { TechScreen } from "./TechScreen";
 
-export type Screen = "intro" | "hub" | "live" | "challenge" | "stats" | "tech";
+export type Screen = "hub" | "live" | "challenge" | "stats" | "tech";
 
 const KEYS: Record<string, Screen> = { "1": "live", "2": "challenge", "3": "stats", "4": "tech" };
 
-export function App() {
+/** The interactive demo (route: /demo). The marketing landing page lives at "/". */
+export function DemoApp() {
   return (
-    <I18nProvider>
-      <EngineProvider>
-        <Shell />
-      </EngineProvider>
-    </I18nProvider>
+    <EngineProvider>
+      <Shell />
+    </EngineProvider>
   );
 }
 
 function Shell() {
   const { t } = useI18n();
-  const [screen, setScreen] = useState<Screen>("intro");
+  const [screen, setScreen] = useState<Screen>("hub");
   const home = useCallback(() => setScreen("hub"), []);
 
   const toggleFullscreen = useCallback(() => {
@@ -40,27 +38,24 @@ function Shell() {
       const el = e.target as HTMLElement | null;
       if (el && (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA")) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === "f" || e.key === "F") {
-        toggleFullscreen();
-      } else if (screen === "intro") {
-        if (e.key === "Enter") setScreen("hub");
-      } else if (e.key === "Escape") {
-        setScreen("hub");
-      } else if (KEYS[e.key]) {
-        setScreen(KEYS[e.key]);
-      }
+      if (e.key === "f" || e.key === "F") toggleFullscreen();
+      else if (e.key === "Escape") setScreen("hub");
+      else if (KEYS[e.key]) setScreen(KEYS[e.key]);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [screen, toggleFullscreen]);
+  }, [toggleFullscreen]);
 
   useEffect(() => {
     document.title = t("app.title");
   }, [t]);
 
+  // scroll to the top whenever the screen changes
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [screen]);
+
   switch (screen) {
-    case "intro":
-      return <Intro onStart={() => setScreen("hub")} />;
     case "hub":
       return <Hub go={setScreen} />;
     case "live":

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { load, save } from "./storage";
+import { landAr, landEn } from "./i18n-landing";
 
 export type Lang = "ar" | "en";
 
@@ -303,7 +304,7 @@ const en: Dict = {
   "tech.credits": "Developed under the supervision of the Egyptian Military Academy in collaboration with DiGiLiANS. The words model is trained on KArSL-502; the letters model on the RGB Arabic Alphabets Sign Language dataset (Al-Barham et al., 2023).",
 };
 
-const DICTS: Record<Lang, Dict> = { ar, en };
+const DICTS: Record<Lang, Dict> = { ar: { ...ar, ...landAr }, en: { ...en, ...landEn } };
 
 interface I18n {
   lang: Lang;

@@ -5,6 +5,8 @@ const nextConfig = {
   output: "export",
   images: { unoptimized: true },
   trailingSlash: true,
+  // Optional: serve from a sub-path (e.g. GitHub Pages) by building with NEXT_PUBLIC_BASE_PATH=/repo
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   reactStrictMode: true,
 };
 
