@@ -8,6 +8,8 @@
  * Chrome adds online Google voices). `hasArabicVoice()` lets the UI say so honestly.
  */
 
+import { BASE_PATH } from "./paths";
+
 let voicesCache: SpeechSynthesisVoice[] = [];
 
 function refreshVoices() {
@@ -58,6 +60,74 @@ export function speak(text: string, opts?: { onEnd?: () => void }): boolean {
 
 export function stopSpeaking() {
   if (ttsSupported()) window.speechSynthesis.cancel();
+  stopClips();
+}
+
+/* ------------------------------------------------------------------ */
+/* Pre-recorded natural voice clips (public/voice, see scripts/make_voice.py) */
+/* ------------------------------------------------------------------ */
+
+let manifest: Set<string> | null = null;
+let manifestLoad: Promise<Set<string>> | null = null;
+let playing: HTMLAudioElement | null = null;
+let runId = 0;
+
+function loadManifest(): Promise<Set<string>> {
+  if (manifest) return Promise.resolve(manifest);
+  manifestLoad ??= fetch(`${BASE_PATH}/voice/manifest.json`)
+    .then((r) => (r.ok ? r.json() : { ids: [] }))
+    .catch(() => ({ ids: [] }))
+    .then((j: { ids?: string[] }) => (manifest = new Set(j.ids ?? [])));
+  return manifestLoad;
+}
+
+function stopClips() {
+  runId++;
+  if (playing) {
+    playing.pause();
+    playing = null;
+  }
+}
+
+function playClip(id: string, myRun: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const a = new Audio(`${BASE_PATH}/voice/${id.replace(":", "_")}.mp3`);
+    playing = a;
+    a.onended = () => resolve(true);
+    a.onerror = () => resolve(false);
+    a.play().catch(() => resolve(false));
+    if (myRun !== runId) a.pause();
+  });
+}
+
+export interface VoicePart {
+  id?: string;
+  text: string;
+}
+
+/**
+ * Speak a sentence made of signs. Uses the natural pre-recorded clip for each
+ * sign when available, and the browser voice for anything else.
+ * Returns true if speech played (clips or an Arabic browser voice).
+ */
+export async function speakParts(parts: VoicePart[]): Promise<boolean> {
+  if (typeof window === "undefined" || !parts.length) return false;
+  stopSpeaking();
+  const my = runId;
+  const have = await loadManifest();
+  if (my !== runId) return true;
+  let ok = true;
+  for (const p of parts) {
+    if (my !== runId) return true;
+    const key = p.id?.replace(":", "_");
+    if (key && have.has(key) && (await playClip(key, my))) continue;
+    if (my !== runId) return true;
+    await new Promise<void>((res) => {
+      if (!speak(p.text, { onEnd: res })) ok = hasArabicVoice() ? ok : false;
+      if (!ttsSupported()) res();
+    });
+  }
+  return ok;
 }
 
 /* ------------------------------------------------------------------ */

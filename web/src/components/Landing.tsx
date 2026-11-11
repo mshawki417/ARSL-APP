@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { asset } from "@/lib/paths";
 import { SITE } from "@/lib/site";
-import { speak, stopSpeaking, ttsSupported, hasArabicVoice } from "@/lib/audio";
+import { speakParts, stopSpeaking } from "@/lib/audio";
 import { LETTER_CLASSES, NUM_LETTERS, NUM_WORDS, WORD_CLASSES } from "@/lib/labels";
 import { Icon, type IconName } from "./Icon";
 import { LangSwitch, Logos } from "./ui";
@@ -333,10 +333,8 @@ function Try() {
   const [sel, setSel] = useState<{ id: string; ar: string; en: string } | null>(null);
   const [noVoice, setNoVoice] = useState(false);
   const list = tab === "letters" ? LETTER_CLASSES : WORD_CLASSES;
-  const say = useCallback((text: string) => {
-    if (!ttsSupported()) return setNoVoice(true);
-    const ok = speak(text);
-    setNoVoice(!ok && !hasArabicVoice());
+  const say = useCallback((c: { id: string; ar: string }) => {
+    speakParts([{ id: c.id, text: c.ar }]).then((ok) => setNoVoice(!ok));
   }, []);
   useEffect(() => () => stopSpeaking(), []);
   return (
@@ -357,7 +355,7 @@ function Try() {
                 key={c.id}
                 onClick={() => {
                   setSel(c);
-                  say(c.ar);
+                  say(c);
                 }}
                 aria-pressed={sel?.id === c.id}
                 className={`btn !h-12 !rounded-xl !px-3 text-lg font-black ${sel?.id === c.id ? "btn-primary" : ""}`}
@@ -377,7 +375,7 @@ function Try() {
                 {sel.en}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                <button className="btn btn-primary" onClick={() => say(sel.ar)}>
+                <button className="btn btn-primary" onClick={() => say(sel)}>
                   <Icon name="volume" size={18} />
                   {t("land.try.speak")}
                 </button>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { sfx, speak, stopSpeaking, ttsSupported, hasArabicVoice } from "@/lib/audio";
+import { sfx, speakParts, stopSpeaking, type VoicePart } from "@/lib/audio";
 import { loadHints, normalizeForHint, saveHint } from "@/lib/storage";
 import { stats } from "@/lib/stats";
 import { useSignTracker } from "@/lib/useSignTracker";
@@ -14,6 +14,7 @@ import { ConfidenceBar, Panel, ProgressRing, TopBar } from "./ui";
 interface Item {
   kind: "letter" | "word" | "space";
   text: string;
+  id?: string;
 }
 
 function sentenceText(items: Item[]): string {
@@ -49,21 +50,16 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
     return () => stopSpeaking();
   }, []);
 
-  const sayIt = useCallback((text: string) => {
-    if (!ttsSupported()) {
-      setNoVoice(true);
-      return;
-    }
-    const ok = speak(text);
-    setNoVoice(!ok && !hasArabicVoice());
+  const sayIt = useCallback((parts: VoicePart[]) => {
+    speakParts(parts).then((ok) => setNoVoice(!ok));
   }, []);
 
   const addSign = useCallback(
     (s: SignResult) => {
-      setItems((prev) => [...prev, { kind: s.kind, text: s.ar }]);
+      setItems((prev) => [...prev, { kind: s.kind, text: s.ar, id: s.id }]);
       sfx.add();
       stats.noteRecognition(s.id);
-      if (autoSpeakRef.current) sayIt(s.ar);
+      if (autoSpeakRef.current) sayIt([{ id: s.id, text: s.ar }]);
     },
     [sayIt],
   );
@@ -233,7 +229,7 @@ export function LiveMode({ onBack }: { onBack: () => void }) {
             {noVoice && <p className="rounded-xl bg-[#fff1c2] p-2 text-sm font-bold text-[#7a5600]">{t("live.nonvoice")}</p>}
 
             <div className="flex flex-wrap gap-2">
-              <button className="btn btn-primary" disabled={!sentence} onClick={() => sayIt(sentence)}>
+              <button className="btn btn-primary" disabled={!sentence} onClick={() => sayIt(items.filter((i) => i.kind !== "space").map((i) => ({ id: i.id, text: i.text })))}>
                 <Icon name="volume" size={18} />
                 {t("live.speak")}
               </button>
